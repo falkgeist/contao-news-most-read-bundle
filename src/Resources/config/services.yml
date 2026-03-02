@@ -2,4 +2,4 @@ services:
     MenAtWork\NewsMostReadBundle\Services\NewsReadCountService:
         public: true
         arguments:
-            - "@session"
+            - '@request_stack'

@@ -15,6 +15,8 @@ namespace MenAtWork\NewsMostReadBundle\Services;
 
 use Contao\Database;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * Class NewsReadCountService
@@ -24,9 +26,9 @@ use Symfony\Component\HttpFoundation\Session\Session;
 class NewsReadCountService
 {
     /**
-     * @var Session
+     * @var RequestStack
      */
-    private $session;
+    private $requestStack;
 
     /**
      * Session name.
@@ -38,9 +40,9 @@ class NewsReadCountService
      *
      * @param Session $session
      */
-    public function __construct(Session $session)
+    public function __construct(RequestStack $requestStack)
     {
-        $this->session = $session;
+        $this->requestStack = $requestStack;
     }
 
     /**
@@ -50,22 +52,27 @@ class NewsReadCountService
      *
      * @return bool Returns true, if the entry was added successfully.
      */
+    private function getSession(): ?SessionInterface
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        return $request ? $request->getSession() : null;
+    }
+
     public function add($newsId)
     {
-        $newsRead = $this->session->get(self::NEWS_COUNT_SESSION_BAG);
-
-        if ($newsRead === null) {
-            $this->session->set(self::NEWS_COUNT_SESSION_BAG, [$newsId]);
-
-            return true;
+        $session = $this->getSession();
+        if (!$session) {
+            return false;
         }
+
+        $newsRead = $session->get(self::NEWS_COUNT_SESSION_BAG, []);
 
         if (in_array($newsId, $newsRead)) {
             return false;
         }
 
         $newsRead[] = $newsId;
-        $this->session->set(self::NEWS_COUNT_SESSION_BAG, $newsRead);
+        $session->set(self::NEWS_COUNT_SESSION_BAG, $newsRead);
 
         return true;
     }
@@ -79,16 +86,13 @@ class NewsReadCountService
      */
     public function hasItem($newsId)
     {
-        $newsRead = $this->session->get(self::NEWS_COUNT_SESSION_BAG);
-
-        if ($newsRead === null) {
+        $session = $this->getSession();
+        if (!$session) {
             return false;
         }
 
-        if (in_array($newsId, $newsRead)) {
-            return true;
-        }
+        $newsRead = $session->get(self::NEWS_COUNT_SESSION_BAG, []);
 
-        return false;
+        return in_array($newsId, $newsRead);
     }
 }
