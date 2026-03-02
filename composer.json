@@ -13,7 +13,7 @@
   ],
   "require": {
     "php": "^7.4 || ^8.0",
-    "contao/news-bundle": "^4.5",
+    "contao/news-bundle": "^5.7",
     "jaybizzle/crawler-detect": "^1.2"
   },
   "conflict": {
